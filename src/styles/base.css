@@ -1,0 +1,91 @@
+/* ============================================================
+   NEUROFLORA — base : stage + scène + mouvement réduit global
+   ============================================================ */
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--night-0);
+  color: var(--ink-mid);
+  font-family: var(--sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+}
+
+.stage {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  isolation: isolate;
+  background: radial-gradient(
+    120% 90% at 50% 38%,
+    color-mix(in oklab, var(--night-2), transparent 30%) 0%,
+    var(--night-1) 42%,
+    var(--night-0) 78%
+  );
+  overflow: hidden;
+}
+
+.scene {
+  position: relative;
+  z-index: 3;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: clamp(14px, 2.4vh, 30px) clamp(16px, 3vw, 48px);
+}
+
+/* ============================================================
+   PLAY — 3 colonnes : coach · board · preuve
+   ============================================================ */
+.play {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr);
+  align-items: center;
+  gap: clamp(18px, 3vw, 60px);
+  min-height: 0;
+}
+
+.flank {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.flank.left {
+  align-items: flex-start;
+}
+.flank.right {
+  align-items: stretch;
+}
+
+/* l'aide se retire : en Silence, les flancs s'effacent */
+.stage[data-climate='silence'] .flank {
+  opacity: 0.12;
+  transform: translateY(6px);
+  pointer-events: none;
+}
+
+/* ============================================================
+   mouvement réduit : statique mais sublime
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

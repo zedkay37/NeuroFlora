@@ -1,0 +1,689 @@
+/* ============================================================
+   NEUROFLORA — système visuel
+   « Ton esprit est une jungle bioluminescente »
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Spectral:ital,wght@0,400;0,500;1,400&family=Marcellus&family=Hanken+Grotesk:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+
+:root {
+  /* — base : jungle-nuit (presque noir, sous-ton teal profond) — */
+  --night-0:  oklch(0.13 0.022 188);   /* le plus profond */
+  --night-1:  oklch(0.165 0.028 184);
+  --night-2:  oklch(0.205 0.032 180);
+  --night-3:  oklch(0.255 0.030 176);
+
+  /* — profondeur lointaine : violet / magenta sourd — */
+  --far-violet: oklch(0.30 0.060 318);
+  --far-magenta: oklch(0.34 0.075 348);
+
+  /* — TROIS TEMPÉRATURES DE SIGNAL — */
+  /* calcul : teal / vert électrique (chaud-vif) */
+  --calc:      oklch(0.84 0.155 178);
+  --calc-deep: color-mix(in oklab, var(--calc), oklch(0.45 0.12 176) 55%);
+  --calc-dim:  color-mix(in oklab, var(--calc), var(--night-1) 52%);
+  /* menace : bleu glacé / blanc électrique (froid, tranchant) */
+  --threat:      oklch(0.90 0.085 232);
+  --threat-core: color-mix(in oklab, var(--threat), white 55%);
+  --threat-dim:  color-mix(in oklab, var(--threat), var(--night-1) 48%);
+  /* preuve : or / ambre miel (chaud, mérité) */
+  --proof:      oklch(0.83 0.135 83);
+  --proof-deep: color-mix(in oklab, var(--proof), oklch(0.5 0.12 66) 50%);
+  --proof-dim:  color-mix(in oklab, var(--proof), var(--night-1) 50%);
+
+  /* — board : clairière — */
+  --sq-dark:  oklch(0.255 0.014 168);   /* graphite chaud mat */
+  --sq-light: oklch(0.815 0.022 96);    /* ivoire / calcaire chaud mat */
+  --ivory:    oklch(0.915 0.020 92);
+  --graphite: oklch(0.205 0.012 196);
+
+  /* — texte — */
+  --ink-hi:  oklch(0.93 0.012 150);
+  --ink-mid: oklch(0.74 0.018 160);
+  --ink-lo:  oklch(0.55 0.020 168);
+  --ink-faint: oklch(0.42 0.022 172);
+
+  /* — variables pilotées par climat + tweaks (réécrites par JS) — */
+  --bio: 1;              /* intensité bioluminescente 0..1.4 */
+  --density: 1;          /* densité de la jungle 0..1 */
+  --breath: 11s;         /* durée de la respiration */
+  --clearing: 1;         /* luminosité de la clairière */
+
+  --display: 'Cormorant', Georgia, serif;
+  --sans: 'Hanken Grotesk', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --board-max: min(82vh, 56vw, 760px);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+
+body {
+  background: var(--night-0);
+  color: var(--ink-mid);
+  font-family: var(--sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+#root { height: 100%; }
+
+/* ============================================================
+   STAGE + scène
+   ============================================================ */
+.stage {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  isolation: isolate;
+  background:
+    radial-gradient(120% 90% at 50% 38%,
+      color-mix(in oklab, var(--night-2), transparent 30%) 0%,
+      var(--night-1) 42%,
+      var(--night-0) 78%);
+  overflow: hidden;
+}
+
+.scene {
+  position: relative;
+  z-index: 3;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: clamp(14px, 2.4vh, 30px) clamp(16px, 3vw, 48px);
+}
+
+/* ============================================================
+   HEADER / marque
+   ============================================================ */
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  z-index: 5;
+}
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.brand-mark svg { display: block; overflow: visible; }
+.brand-word {
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: clamp(20px, 2.5vw, 30px);
+  letter-spacing: 0.18em;
+  color: var(--ink-hi);
+  text-transform: uppercase;
+  line-height: 1;
+}
+.brand-word b {
+  font-weight: 500;
+  color: color-mix(in oklab, var(--calc), var(--ink-hi) 35%);
+}
+.brand-sub {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 5px;
+}
+
+/* — contrôle de climat (segmenté) — */
+.climates {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--night-2), transparent 35%);
+  border: 1px solid color-mix(in oklab, var(--calc-dim), transparent 80%);
+  backdrop-filter: blur(8px);
+}
+.climate-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink-lo);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color .4s ease, background .4s ease;
+  white-space: nowrap;
+}
+.climate-btn:hover { color: var(--ink-mid); }
+.climate-btn[data-on="true"] {
+  color: var(--night-0);
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--accent, var(--calc)), white 8%),
+    var(--accent, var(--calc)));
+  box-shadow:
+    0 0 18px color-mix(in oklab, var(--accent, var(--calc)), transparent 55%),
+    inset 0 1px 0 rgba(255,255,255,.3);
+}
+
+/* ============================================================
+   PLAY — 3 colonnes : coach · board · preuve
+   ============================================================ */
+.play {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr);
+  align-items: center;
+  gap: clamp(18px, 3vw, 60px);
+  min-height: 0;
+}
+
+.flank {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: opacity .8s ease, transform .8s ease;
+}
+.flank.left { align-items: flex-start; }
+.flank.right { align-items: stretch; }
+
+/* l'aide se retire : en Silence, les flancs s'effacent */
+.stage[data-climate="silence"] .flank {
+  opacity: 0.12;
+  transform: translateY(6px);
+  pointer-events: none;
+}
+
+/* ============================================================
+   COACH minimal (1–2 lignes)
+   ============================================================ */
+.coach {
+  max-width: 300px;
+}
+.coach-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.coach-eyebrow::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--temp, var(--calc));
+  box-shadow: 0 0 10px var(--temp, var(--calc));
+}
+.coach-line {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(20px, 2.05vw, 27px);
+  line-height: 1.26;
+  color: var(--ink-hi);
+  letter-spacing: 0.004em;
+  text-wrap: pretty;
+  margin-bottom: 18px;
+  transition: opacity .5s ease;
+}
+.coach-line em {
+  font-style: italic;
+  color: color-mix(in oklab, var(--temp, var(--calc)), var(--ink-hi) 30%);
+}
+.coach-hint {
+  margin-top: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-lo);
+  max-width: 250px;
+}
+
+/* lecture de menace sobre */
+.threat-read {
+  margin-top: 22px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--threat);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+.threat-read[data-on="true"] { opacity: 1; transform: none; }
+.threat-read .pip {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--threat-core);
+  box-shadow: 0 0 12px var(--threat), 0 0 4px var(--threat-core);
+  animation: coldPulse 1.5s ease-in-out infinite;
+}
+@keyframes coldPulse {
+  0%,100% { opacity: .5; transform: scale(.8); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+/* ============================================================
+   BOARD = clairière / nexus
+   ============================================================ */
+.board-nexus {
+  position: relative;
+  width: var(--board-max);
+  height: var(--board-max);
+  display: grid;
+  place-items: center;
+}
+
+/* halo de clairière sous le board */
+.board-nexus::before {
+  content: '';
+  position: absolute;
+  inset: -22%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 46%,
+    color-mix(in oklab, var(--calc-deep), transparent calc(82% - var(--bio) * 8%)) 0%,
+    color-mix(in oklab, var(--night-2), transparent 40%) 34%,
+    transparent 66%);
+  filter: blur(8px);
+  opacity: calc(0.5 + var(--clearing) * 0.5);
+  z-index: -1;
+  transition: opacity 1s ease;
+  animation: clearingBreath var(--breath) ease-in-out infinite;
+}
+@keyframes clearingBreath {
+  0%,100% { transform: scale(1); opacity: calc(.42 + var(--clearing) * .4); }
+  50% { transform: scale(1.04); opacity: calc(.5 + var(--clearing) * .5); }
+}
+
+.board-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 7px;
+  padding: 4px;
+  background:
+    linear-gradient(160deg,
+      color-mix(in oklab, var(--calc-dim), transparent 70%),
+      transparent 38%,
+      color-mix(in oklab, var(--far-violet), transparent 78%));
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--calc), transparent calc(72% - var(--bio)*12%)),
+    0 24px 80px -28px rgba(0,0,0,.85),
+    0 0 60px -10px color-mix(in oklab, var(--calc-deep), transparent calc(80% - var(--bio)*10%));
+  transition: box-shadow 1s ease;
+}
+
+.board-grid {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  border-radius: 4px;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.sq {
+  position: relative;
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--board-max) / 11.4);
+  line-height: 1;
+  user-select: none;
+  cursor: default;
+}
+.sq.light { background: var(--sq-light); }
+.sq.dark  { background: var(--sq-dark); }
+
+/* sélection = la case respire d'une lumière interne */
+.sq[data-sel="true"]::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 50%,
+    color-mix(in oklab, var(--calc), transparent 30%) 0%,
+    color-mix(in oklab, var(--calc), transparent 70%) 45%,
+    transparent 72%);
+  mix-blend-mode: screen;
+  animation: sqBreath 2.4s ease-in-out infinite;
+}
+@keyframes sqBreath { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+
+/* dernier coup = trace de sève lumineuse */
+.sq[data-last="true"] {
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--calc), transparent 58%);
+}
+.sq[data-last="from"]::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle, color-mix(in oklab, var(--calc), transparent 80%), transparent 70%);
+  mix-blend-mode: screen;
+}
+
+/* roi en échec = liseré froid */
+.sq[data-check="true"] {
+  box-shadow:
+    inset 0 0 0 2.5px color-mix(in oklab, var(--threat), transparent 25%),
+    inset 0 0 22px color-mix(in oklab, var(--threat), transparent 55%);
+}
+
+/* preuve déposée = synapse dorée qui reste */
+.sq[data-proof="true"]::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 50%,
+    color-mix(in oklab, var(--proof), transparent 40%) 0%,
+    transparent 64%);
+  mix-blend-mode: screen;
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--proof), transparent 55%);
+  animation: sqBreath 3s ease-in-out infinite;
+}
+
+.sq.hot { cursor: pointer; }
+.sq.movable:not([data-sel="true"]):hover {
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--calc), transparent 50%);
+}
+
+/* — pièces — */
+.piece {
+  position: relative;
+  z-index: 3;
+  transition: transform .18s cubic-bezier(.2,.8,.2,1), filter .3s ease;
+  will-change: transform;
+}
+.piece.w {
+  color: var(--ivory);
+  text-shadow:
+    0 0 1px var(--graphite),
+    0.5px 0.5px 0 color-mix(in oklab, var(--graphite), transparent 30%),
+    -0.5px 0 0 color-mix(in oklab, var(--graphite), transparent 55%),
+    0 1px 0 color-mix(in oklab, var(--graphite), transparent 45%),
+    0 3px 6px rgba(0,0,0,.5);
+}
+.piece.b {
+  color: var(--graphite);
+  text-shadow:
+    0 -0.5px 0 color-mix(in oklab, var(--ink-mid), transparent 55%),
+    0 0 1px rgba(0,0,0,.8),
+    0 3px 7px rgba(0,0,0,.6);
+}
+.sq.hot .piece { cursor: grab; }
+.sq[data-sel="true"] .piece {
+  transform: translateY(-2%) scale(1.05);
+  filter: drop-shadow(0 0 9px color-mix(in oklab, var(--calc), transparent 30%));
+}
+.piece.lift { transform: translateY(-7%) scale(1.07); }
+
+/* — bourgeon candidat (point étoile vivant en creux) — */
+.bud {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  width: 26%; height: 26%;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    var(--calc) 0%,
+    color-mix(in oklab, var(--calc), transparent 40%) 35%,
+    transparent 70%);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--calc), transparent 45%);
+  opacity: 0;
+  animation: budIn .5s ease forwards;
+  animation-delay: var(--d, 0s);
+}
+.bud.capture {
+  width: 86%; height: 86%;
+  background: none;
+  border: 2.5px solid color-mix(in oklab, var(--calc), transparent 35%);
+  box-shadow:
+    0 0 16px color-mix(in oklab, var(--calc), transparent 55%),
+    inset 0 0 14px color-mix(in oklab, var(--calc), transparent 70%);
+  border-radius: 14%;
+}
+@keyframes budIn {
+  from { opacity: 0; transform: scale(.3); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.sq[data-sel="true"] .bud,
+.sq.movable:hover .bud { opacity: 0; }
+
+/* — coordonnées gravées bioluminescentes — */
+.coord {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: calc(var(--board-max) / 64);
+  font-weight: 400;
+  letter-spacing: .04em;
+  pointer-events: none;
+  z-index: 4;
+  opacity: .65;
+}
+.coord.file { bottom: 3%; right: 6%; }
+.coord.rank { top: 3%; left: 6%; }
+.coord.on-light { color: color-mix(in oklab, var(--graphite), var(--calc-dim) 30%); }
+.coord.on-dark  { color: color-mix(in oklab, var(--calc-dim), transparent 25%); }
+
+/* ============================================================
+   OVERLAY de signaux (SVG) — floraison, menace, preuve
+   ============================================================ */
+.sig-svg {
+  position: absolute;
+  inset: 4px;
+  z-index: 5;           /* sous les pièces ? non : au-dessus board, mais pièces sont z3 dans grid (z2) */
+  pointer-events: none;
+  overflow: visible;
+}
+/* la grille des pièces doit rester lisible : l'overlay vit au-dessus du damier
+   mais les pièces sont rehaussées par leur propre glow. Les traits sont fins. */
+
+.dendrite { fill: none; stroke-linecap: round; }
+.dendrite.calc  { stroke: var(--calc); }
+.dendrite.calc-twig { stroke: var(--calc-deep); }
+.dendrite.threat { stroke: var(--threat); }
+.dendrite.proof  { stroke: var(--proof); }
+
+.grow {
+  stroke-dasharray: var(--len);
+  stroke-dashoffset: var(--len);
+  animation: grow .7s cubic-bezier(.25,.7,.3,1) forwards;
+  animation-delay: var(--gd, 0s);
+}
+@keyframes grow { to { stroke-dashoffset: 0; } }
+
+.pulse {
+  stroke-dasharray: 0.5 var(--len);
+  stroke-dashoffset: var(--len);
+  animation: runpulse 1.5s linear infinite;
+}
+@keyframes runpulse { to { stroke-dashoffset: 0; } }
+
+/* ============================================================
+   MYCÉLIUM racinaire (relie le board au réseau)
+   ============================================================ */
+.mycelium {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  width: 150%;
+  height: 60%;
+  z-index: -1;
+  pointer-events: none;
+  overflow: visible;
+  opacity: calc(0.35 + var(--density) * 0.5);
+  transition: opacity 1s ease;
+}
+.mycelium path {
+  fill: none;
+  stroke: color-mix(in oklab, var(--calc-dim), transparent calc(55% - var(--bio)*10%));
+  stroke-linecap: round;
+}
+
+/* ============================================================
+   PREUVE — ledger + boutons-organes
+   ============================================================ */
+.ledger { width: 100%; max-width: 270px; }
+.ledger-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.ledger-title::before {
+  content: '';
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--proof);
+  box-shadow: 0 0 10px var(--proof);
+}
+.proof-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-top: 1px solid color-mix(in oklab, var(--proof-dim), transparent 82%);
+  animation: proofIn .6s ease;
+}
+@keyframes proofIn { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: none; } }
+.proof-syn {
+  width: 22px; height: 22px;
+  flex: none;
+  display: grid; place-items: center;
+}
+.proof-syn span {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--proof);
+  box-shadow: 0 0 14px var(--proof), 0 0 5px var(--proof-deep);
+}
+.proof-label {
+  font-family: var(--display);
+  font-size: 17px;
+  color: var(--ink-hi);
+  line-height: 1.18;
+}
+.proof-meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--proof-dim);
+  letter-spacing: .05em;
+  margin-top: 2px;
+}
+.ledger-empty {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-lo);
+  font-style: italic;
+  font-family: var(--display);
+  font-size: 16px;
+}
+
+/* — boutons = organes vivants — */
+.organs { display: flex; flex-direction: column; gap: 11px; margin-top: 26px; }
+.organ {
+  position: relative;
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--ink-hi);
+  padding: 13px 18px;
+  border-radius: 13px;
+  text-align: left;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--night-3), transparent 10%),
+      color-mix(in oklab, var(--night-1), transparent 5%));
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--organ-c, var(--calc)), transparent 75%),
+    inset 0 0 0 1px color-mix(in oklab, var(--organ-c, var(--calc)), transparent 80%),
+    0 8px 24px -14px rgba(0,0,0,.8);
+  transition: transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease;
+  isolation: isolate;
+}
+.organ::before { /* pulsation interne */
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(80% 140% at 18% 50%,
+    color-mix(in oklab, var(--organ-c, var(--calc)), transparent 75%),
+    transparent 60%);
+  opacity: .5;
+  mix-blend-mode: screen;
+  animation: organPulse 4s ease-in-out infinite;
+  z-index: -1;
+}
+@keyframes organPulse { 0%,100% { opacity: .32; } 50% { opacity: .7; } }
+.organ::after { /* vrille-liane qui se déploie au survol */
+  content: '';
+  position: absolute;
+  right: 14px; top: 50%;
+  width: 0; height: 1.5px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--organ-c, var(--calc)));
+  box-shadow: 0 0 8px var(--organ-c, var(--calc));
+  transform: translateY(-50%);
+  transition: width .45s cubic-bezier(.2,.8,.2,1);
+}
+.organ:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--organ-c, var(--calc)), transparent 55%),
+    inset 0 0 0 1px color-mix(in oklab, var(--organ-c, var(--calc)), transparent 60%),
+    0 14px 30px -16px rgba(0,0,0,.85),
+    0 0 26px -8px color-mix(in oklab, var(--organ-c, var(--calc)), transparent 55%);
+}
+.organ:hover::after { width: 30px; }
+.organ:active { transform: translateY(0); }
+.organ small {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+.organ.proof { --organ-c: var(--proof); }
+.organ.rematch { --organ-c: var(--calc); }
+.organ.silence { --organ-c: var(--threat); }
+
+/* statut de partie sobre */
+.status {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .05em;
+  color: var(--ink-lo);
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+.status b { color: var(--ink-hi); font-weight: 500; }
+.turn-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  border: 1px solid color-mix(in oklab, var(--calc), transparent 50%);
+}
+.turn-dot.w { background: var(--ivory); }
+.turn-dot.b { background: var(--graphite); }
+
+/* ============================================================
+   réglage de mouvement réduit : statique mais sublime
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .grow { animation: none; stroke-dashoffset: 0; }
+  .pulse { display: none; }
+  .bud { animation: none; opacity: 1; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

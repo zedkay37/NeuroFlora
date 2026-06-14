@@ -1,0 +1,361 @@
+/* ============================================================
+   NEUROFLORA — Board = clairière / nexus
+   ============================================================ */
+.board-nexus {
+  position: relative;
+  width: var(--board-max);
+  height: var(--board-max);
+  display: grid;
+  place-items: center;
+}
+
+/* halo de clairière sous le board */
+.board-nexus::before {
+  content: '';
+  position: absolute;
+  inset: -22%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 46%,
+    color-mix(in oklab, var(--calc-deep), transparent calc(82% - var(--bio) * 8%)) 0%,
+    color-mix(in oklab, var(--night-2), transparent 40%) 34%,
+    transparent 66%
+  );
+  filter: blur(8px);
+  opacity: calc(0.5 + var(--clearing) * 0.5);
+  z-index: -1;
+  transition: opacity 1s ease;
+  animation: clearingBreath var(--breath) ease-in-out infinite;
+}
+@keyframes clearingBreath {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: calc(0.42 + var(--clearing) * 0.4);
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: calc(0.5 + var(--clearing) * 0.5);
+  }
+}
+
+.board-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 7px;
+  padding: 4px;
+  background: linear-gradient(
+    160deg,
+    color-mix(in oklab, var(--calc-dim), transparent 70%),
+    transparent 38%,
+    color-mix(in oklab, var(--far-violet), transparent 78%)
+  );
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--calc), transparent calc(72% - var(--bio) * 12%)),
+    0 24px 80px -28px rgba(0, 0, 0, 0.85),
+    0 0 60px -10px color-mix(in oklab, var(--calc-deep), transparent calc(80% - var(--bio) * 10%));
+  transition: box-shadow 1s ease;
+}
+
+.board-grid {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  border-radius: 4px;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.sq {
+  position: relative;
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--board-max) / 11.4);
+  line-height: 1;
+  user-select: none;
+  cursor: default;
+}
+.sq.light {
+  background: var(--sq-light);
+}
+.sq.dark {
+  background: var(--sq-dark);
+}
+
+/* sélection = la case respire d'une lumière interne */
+.sq[data-sel='true']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklab, var(--calc), transparent 30%) 0%,
+    color-mix(in oklab, var(--calc), transparent 70%) 45%,
+    transparent 72%
+  );
+  mix-blend-mode: screen;
+  animation: sqBreath 2.4s ease-in-out infinite;
+}
+@keyframes sqBreath {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* dernier coup = trace de sève lumineuse */
+.sq[data-last='true'] {
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--calc), transparent 58%);
+}
+.sq[data-last='from']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, color-mix(in oklab, var(--calc), transparent 80%), transparent 70%);
+  mix-blend-mode: screen;
+}
+
+/* roi en échec = liseré froid */
+.sq[data-check='true'] {
+  box-shadow:
+    inset 0 0 0 2.5px color-mix(in oklab, var(--threat), transparent 25%),
+    inset 0 0 22px color-mix(in oklab, var(--threat), transparent 55%);
+}
+
+/* preuve déposée = synapse dorée qui reste */
+.sq[data-proof='true']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklab, var(--proof), transparent 40%) 0%,
+    transparent 64%
+  );
+  mix-blend-mode: screen;
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--proof), transparent 55%);
+  animation: sqBreath 3s ease-in-out infinite;
+}
+
+.sq.hot {
+  cursor: pointer;
+}
+.sq.movable:not([data-sel='true']):hover {
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--calc), transparent 50%);
+}
+
+/* — pièces — */
+.piece {
+  position: relative;
+  z-index: 3;
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.3s ease;
+  will-change: transform;
+}
+.piece.w {
+  color: var(--ivory);
+  text-shadow:
+    0 0 1px var(--graphite),
+    0.5px 0.5px 0 color-mix(in oklab, var(--graphite), transparent 30%),
+    -0.5px 0 0 color-mix(in oklab, var(--graphite), transparent 55%),
+    0 1px 0 color-mix(in oklab, var(--graphite), transparent 45%),
+    0 3px 6px rgba(0, 0, 0, 0.5);
+}
+.piece.b {
+  color: var(--graphite);
+  text-shadow:
+    0 -0.5px 0 color-mix(in oklab, var(--ink-mid), transparent 55%),
+    0 0 1px rgba(0, 0, 0, 0.8),
+    0 3px 7px rgba(0, 0, 0, 0.6);
+}
+.sq.hot .piece {
+  cursor: grab;
+}
+.sq[data-sel='true'] .piece {
+  transform: translateY(-2%) scale(1.05);
+  filter: drop-shadow(0 0 9px color-mix(in oklab, var(--calc), transparent 30%));
+}
+.piece.lift {
+  transform: translateY(-7%) scale(1.07);
+}
+
+/* — bourgeon candidat — */
+.bud {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  width: 26%;
+  height: 26%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    var(--calc) 0%,
+    color-mix(in oklab, var(--calc), transparent 40%) 35%,
+    transparent 70%
+  );
+  box-shadow: 0 0 12px color-mix(in oklab, var(--calc), transparent 45%);
+  opacity: 0;
+  animation: budIn 0.5s ease forwards;
+  animation-delay: var(--d, 0s);
+}
+.bud.capture {
+  width: 86%;
+  height: 86%;
+  background: none;
+  border: 2.5px solid color-mix(in oklab, var(--calc), transparent 35%);
+  box-shadow:
+    0 0 16px color-mix(in oklab, var(--calc), transparent 55%),
+    inset 0 0 14px color-mix(in oklab, var(--calc), transparent 70%);
+  border-radius: 14%;
+}
+@keyframes budIn {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.sq[data-sel='true'] .bud,
+.sq.movable:hover .bud {
+  opacity: 0;
+}
+
+/* — coordonnées gravées bioluminescentes — */
+.coord {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: calc(var(--board-max) / 64);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0.65;
+}
+.coord.file {
+  bottom: 3%;
+  right: 6%;
+}
+.coord.rank {
+  top: 3%;
+  left: 6%;
+}
+.coord.on-light {
+  color: color-mix(in oklab, var(--graphite), var(--calc-dim) 30%);
+}
+.coord.on-dark {
+  color: color-mix(in oklab, var(--calc-dim), transparent 25%);
+}
+
+/* ============================================================
+   OVERLAY de signaux (SVG) — floraison, menace
+   ============================================================ */
+.sig-svg {
+  position: absolute;
+  inset: 4px;
+  z-index: 5;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.dendrite {
+  fill: none;
+  stroke-linecap: round;
+}
+.dendrite.calc {
+  stroke: var(--calc);
+}
+.dendrite.calc-twig {
+  stroke: var(--calc-deep);
+}
+.dendrite.threat {
+  stroke: var(--threat);
+}
+.dendrite.proof {
+  stroke: var(--proof);
+}
+
+.grow {
+  stroke-dasharray: var(--len);
+  stroke-dashoffset: var(--len);
+  animation: grow 0.7s cubic-bezier(0.25, 0.7, 0.3, 1) forwards;
+  animation-delay: var(--gd, 0s);
+}
+@keyframes grow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.pulse {
+  stroke-dasharray: 0.5 var(--len);
+  stroke-dashoffset: var(--len);
+  animation: runpulse 1.5s linear infinite;
+}
+@keyframes runpulse {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* la menace court, froide */
+.dendrite.cold {
+  stroke-dashoffset: 0;
+  animation: coldRun 1.1s linear infinite;
+}
+@keyframes coldRun {
+  from {
+    stroke-dashoffset: var(--len, 8);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ============================================================
+   MYCÉLIUM racinaire (relie le board au réseau)
+   ============================================================ */
+.mycelium {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  width: 150%;
+  height: 60%;
+  z-index: -1;
+  pointer-events: none;
+  overflow: visible;
+  opacity: calc(0.35 + var(--density) * 0.5);
+  transition: opacity 1s ease;
+}
+.mycelium path {
+  fill: none;
+  stroke: color-mix(in oklab, var(--calc-dim), transparent calc(55% - var(--bio) * 10%));
+  stroke-linecap: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grow {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .pulse {
+    display: none;
+  }
+  .bud {
+    animation: none;
+    opacity: 1;
+  }
+  .dendrite.cold {
+    animation: none !important;
+    stroke-dasharray: none !important;
+  }
+}
