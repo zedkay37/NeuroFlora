@@ -35,3 +35,5 @@ export type FontKey = keyof typeof FONTS;
 
 export const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 export const GUIDED_FEN = 'r1bqkb1r/ppp2ppp/2np1n2/4N3/2B1P3/8/PPPP1PPP/RNBQK2R w KQkq - 0 1';
+// Silence : cavalier blanc en g4 attaqué par Cf6, sans aide. Le joueur doit voir seul.
+export const SILENCE_FEN = 'rnbqkb1r/pppp1ppp/5n2/4p3/4P1N1/8/PPPP1PPP/RNBQKB1R w KQkq - 0 1';

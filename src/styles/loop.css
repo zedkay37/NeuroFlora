@@ -1,0 +1,124 @@
+/* ============================================================
+   NEUROFLORA — la boucle : spine séquentielle + appel à l'action
+   ============================================================ */
+.loop-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.spine {
+  display: flex;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.spine-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 88px;
+  transition: opacity 0.5s ease;
+}
+/* connecteur depuis le nœud précédent */
+.spine-node::before {
+  content: '';
+  position: absolute;
+  top: 13px;
+  right: 50%;
+  width: 100%;
+  height: 1.5px;
+  margin-right: 14px;
+  background: color-mix(in oklab, var(--ink-faint), transparent 55%);
+  transition: background 0.5s ease;
+}
+.spine-node:first-child::before {
+  display: none;
+}
+.spine-node[data-state='done']::before,
+.spine-node[data-state='on']::before {
+  background: color-mix(in oklab, var(--proof), transparent 35%);
+}
+
+.spine-dot {
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in oklab, var(--ink-faint), transparent 30%);
+  background: color-mix(in oklab, var(--night-2), transparent 25%);
+  color: var(--ink-lo);
+  font: 600 11px/1 var(--mono);
+  cursor: pointer;
+  transition: all 0.4s ease;
+}
+.spine-dot:disabled {
+  cursor: default;
+}
+.spine-dot:not(:disabled):hover {
+  border-color: var(--accent);
+}
+.spine-node[data-state='on'] .spine-dot {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--night-0);
+  box-shadow: 0 0 16px color-mix(in oklab, var(--accent), transparent 50%);
+}
+.spine-node[data-state='done'] .spine-dot {
+  border-color: var(--proof);
+  background: color-mix(in oklab, var(--proof), transparent 80%);
+  color: var(--proof);
+}
+.spine-node[data-state='seen'] .spine-dot {
+  border-color: color-mix(in oklab, var(--ink-mid), transparent 30%);
+  color: var(--ink-mid);
+}
+.spine-node[data-state='todo'] {
+  opacity: 0.4;
+}
+
+.spine-label {
+  font: 10px/1.2 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.spine-node[data-state='on'] .spine-label {
+  color: var(--ink-hi);
+}
+
+/* — appel à l'action contextuel (le seul pas en avant) — */
+.loop-cta {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  font: 500 13px/1 var(--sans);
+  letter-spacing: 0.01em;
+  padding: 11px 22px;
+  border-radius: 999px;
+  color: var(--night-0);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--accent), white 10%), var(--accent));
+  box-shadow:
+    0 0 22px color-mix(in oklab, var(--accent), transparent 55%),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: transform 0.25s ease, box-shadow 0.4s ease, opacity 0.4s ease;
+}
+.loop-cta:hover {
+  transform: translateY(-1px);
+}
+.loop-cta[data-ready='false'] {
+  cursor: default;
+  color: var(--ink-lo);
+  background: none;
+  border: 1px solid color-mix(in oklab, var(--ink-faint), transparent 50%);
+  box-shadow: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}

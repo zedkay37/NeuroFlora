@@ -1,9 +1,8 @@
 /* ============================================================
    NEUROFLORA — useNeuroGame
-   Tout l'état jouable : sélection, floraison, menace, preuves, coach,
-   adversaire. App ne fait que composer le rendu à partir d'ici.
+   Tout l'état jouable + la boucle (state machine). App ne fait que rendre.
    ============================================================ */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { Chess } from 'chess.js';
 import type { Color, Square } from 'chess.js';
 import {
@@ -16,15 +15,17 @@ import {
   type MoveTarget,
   type Threat,
 } from '../lib/engine';
-import { GUIDED_FEN, START, type ClimateKey } from '../lib/climate';
+import { GUIDED_FEN, SILENCE_FEN, START } from '../lib/climate';
 import {
   calcCoach,
   climateCoach,
   mateCoach,
   proofCoach,
   threatCoach,
+  todayCoach,
   type CoachMessage,
 } from '../lib/coach';
+import { initLoop, loopCta, loopReducer, type LoopStep } from '../lib/loop';
 
 export interface Proof {
   id: number;
@@ -44,6 +45,11 @@ export interface LastMove {
 
 const PLAYER: Color = 'w';
 const AI_DELAY = 620;
+const FEN_FOR: Partial<Record<LoopStep, string>> = {
+  today: START,
+  guided: GUIDED_FEN,
+  silence: SILENCE_FEN,
+};
 
 export function useNeuroGame() {
   const gameRef = useRef<Chess | null>(null);
@@ -53,7 +59,7 @@ export function useNeuroGame() {
   const [, force] = useState(0);
   const redraw = useCallback(() => force((n) => n + 1), []);
 
-  const [climate, setClimate] = useState<ClimateKey>('today');
+  const [loop, dispatch] = useReducer(loopReducer, undefined, initLoop);
   const [selected, setSelected] = useState<Square | null>(null);
   const [targets, setTargets] = useState<MoveTarget[]>([]);
   const [lastMove, setLastMove] = useState<LastMove | null>(null);
@@ -66,63 +72,56 @@ export function useNeuroGame() {
   const provedAt = useRef(0);
   const aiTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  const climate = loop.step;
   const showGuides = climate !== 'silence';
   const position = game.board();
 
-  // — recalcul de menace après chaque position —
+  // — menace : la vérité est toujours calculée (preuve + jauge) ;
+  //   le signal froid n'est visible que si l'aide est active. —
   const refreshThreat = useCallback(
     (g: Chess): Threat | null => {
-      const th = climate === 'silence' ? null : detectThreat(g);
-      setThreat(showGuides && th ? th : null);
+      const th = detectThreat(g);
       pendingThreat.current = th;
+      setThreat(showGuides && th ? th : null);
       return th;
     },
-    [climate, showGuides],
+    [showGuides],
   );
 
   const syncCoach = useCallback(
     (th?: Threat | null) => {
       const t2 = th !== undefined ? th : pendingThreat.current;
-      if (climate === 'silence') {
-        setCoach(null);
-        return;
-      }
-      if (t2 && showGuides) setCoach(threatCoach(t2.victim));
-      else setCoach(climateCoach(climate));
+      if (climate === 'silence') return setCoach(null);
+      if (t2 && showGuides) return setCoach(threatCoach(t2.victim));
+      setCoach(climate === 'today' ? todayCoach() : climateCoach(climate));
     },
     [climate, showGuides],
   );
 
-  // — déposer une preuve dorée —
-  const depositProof = useCallback((th: Threat, destSq: Square) => {
-    provedAt.current = Date.now();
-    const label = th.undefended ? 'Pièce sauvée — la voie tient' : 'Échange neutralisé';
-    setProofs((p) =>
-      [{ id: Date.now(), label, meta: `${FR[th.victim] ?? 'pièce'} · menace vue` }, ...p].slice(0, 4),
-    );
-    setProofSqs((s) => {
-      const n = new Set(s);
-      n.add(destSq || th.to);
-      return n;
-    });
-    setCoach(proofCoach());
-  }, []);
+  // — déposer une preuve dorée (silencieuse en Silence) —
+  const depositProof = useCallback(
+    (th: Threat, destSq: Square) => {
+      provedAt.current = Date.now();
+      const label = th.undefended ? 'Pièce sauvée — la voie tient' : 'Échange neutralisé';
+      setProofs((p) =>
+        [{ id: Date.now(), label, meta: `${FR[th.victim] ?? 'pièce'} · menace vue` }, ...p].slice(0, 6),
+      );
+      setProofSqs((s) => new Set(s).add(destSq || th.to));
+      if (showGuides) setCoach(proofCoach());
+    },
+    [showGuides],
+  );
 
-  // — après stabilisation de la position —
   const afterPosition = useCallback(() => {
     const th = refreshThreat(game);
     if (game.isCheckmate()) setCoach(mateCoach());
     else if (!selected && Date.now() - provedAt.current > 2600) syncCoach(th);
   }, [game, refreshThreat, selected, syncCoach]);
 
-  // — l'adversaire répond —
   const scheduleAI = useCallback(() => {
     clearTimeout(aiTimer.current);
     aiTimer.current = setTimeout(() => {
-      if (game.isGameOver() || game.turn() === PLAYER) {
-        afterPosition();
-        return;
-      }
+      if (game.isGameOver() || game.turn() === PLAYER) return afterPosition();
       const m = aiMove(game);
       if (m) {
         game.move({ from: m.from, to: m.to, promotion: 'q' });
@@ -133,13 +132,11 @@ export function useNeuroGame() {
     }, AI_DELAY);
   }, [game, redraw, afterPosition]);
 
-  // — clic sur une case —
   const onSquareClick = useCallback(
     (sq: Square) => {
       if (game.isGameOver()) return;
       const piece = position[8 - parseInt(sq[1], 10)][sq.charCodeAt(0) - 97];
       const tgt = targets.find((x) => x.to === sq);
-      // jouer un coup si c'est une cible
       if (selected && tgt) {
         const before = pendingThreat.current;
         try {
@@ -150,39 +147,37 @@ export function useNeuroGame() {
         setLastMove({ from: selected, to: sq });
         setSelected(null);
         setTargets([]);
-        // preuve : la menace vue a-t-elle été désamorcée ?
-        if (before && !stillThreatened(game, before)) depositProof(before, sq);
+        const proven = !!before && !stillThreatened(game, before);
+        if (proven) depositProof(before!, sq);
+        if (climate === 'guided' && proven) dispatch({ type: 'GUIDED_PROVEN' });
+        if (climate === 'silence') dispatch({ type: 'SILENCE_RESOLVED' });
         redraw();
         scheduleAI();
         return;
       }
-      // sélectionner sa propre pièce → la floraison de calcul
       if (piece && piece.color === game.turn()) {
         setSelected(sq);
         const ms = legalTargets(game, sq);
         setTargets(ms);
-        setCoach(calcCoach(ms.length));
+        if (showGuides) setCoach(calcCoach(ms.length));
         return;
       }
-      // clic à vide → désélection
       setSelected(null);
       setTargets([]);
       syncCoach();
     },
-    [game, position, selected, targets, redraw, depositProof, scheduleAI, syncCoach],
+    [game, position, selected, targets, climate, showGuides, redraw, depositProof, scheduleAI, syncCoach],
   );
 
-  // — nouvelle partie / position guidée —
-  const newGame = useCallback(
-    (fen?: string, clim?: ClimateKey) => {
+  // — charger une position (garde les preuves du voyage) —
+  const loadPosition = useCallback(
+    (fen: string) => {
       clearTimeout(aiTimer.current);
-      gameRef.current = new Chess(fen || START);
+      gameRef.current = new Chess(fen);
       setSelected(null);
       setTargets([]);
       setLastMove(null);
-      setProofs([]);
       setProofSqs(new Set());
-      if (clim) setClimate(clim);
       pendingThreat.current = null;
       redraw();
       setTimeout(() => {
@@ -193,39 +188,45 @@ export function useNeuroGame() {
     [redraw, refreshThreat, syncCoach],
   );
 
-  // changer de climat depuis l'UI : on désélectionne (comme les onglets du proto)
-  const changeClimate = useCallback((k: ClimateKey) => {
-    setSelected(null);
-    setTargets([]);
-    setClimate(k);
+  const replay = useCallback(() => {
+    setProofs([]);
+    dispatch({ type: 'REPLAY' });
   }, []);
 
-  // recompute coach/threat quand le climat change
+  // — charger la position quand l'étape change —
+  const loadedStep = useRef<LoopStep>('today');
   useEffect(() => {
-    if (!selected) syncCoach();
-    setThreat(climate === 'silence' ? null : pendingThreat.current);
-    // dépend du seul climat (parité avec le prototype) ; les closures sont
-    // fraîches car l'effet se déclenche après le rendu du changement de climat.
-  }, [climate]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (loadedStep.current === climate) return;
+    loadedStep.current = climate;
+    const fen = FEN_FOR[climate];
+    if (fen) loadPosition(fen); // 'proof' garde le plateau (vue de synthèse)
+  }, [climate, loadPosition]);
 
   // menace initiale au montage + cleanup du timer
   useEffect(() => {
     afterPosition();
     return () => clearTimeout(aiTimer.current);
-    // au montage uniquement
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // — floraison de calcul —
   const calcVeins: CalcVein[] =
     showGuides && selected
       ? targets.map((tg, i) => ({ from: selected, to: tg.to, capture: tg.capture, seed: i + 5 }))
       : [];
 
   const checkSq = game.isCheck() ? findKing(game, game.turn()) : null;
+  const cta = loopCta(loop);
+  const runCta = () => {
+    if (!cta.event) return;
+    cta.event.type === 'REPLAY' ? replay() : dispatch(cta.event);
+  };
+  const gotoStep = useCallback((step: LoopStep) => dispatch({ type: 'GOTO', step }), []);
 
   return {
     climate,
-    setClimate: changeClimate,
+    loop,
+    cta,
+    runCta,
+    gotoStep,
     position,
     turn: game.turn(),
     selected,
@@ -239,7 +240,5 @@ export function useNeuroGame() {
     calcVeins,
     showGuides,
     onSquareClick,
-    newGame,
-    guidedFen: GUIDED_FEN,
   };
 }

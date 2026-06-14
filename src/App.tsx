@@ -5,12 +5,13 @@
 import { type CSSProperties } from 'react';
 import { useNeuroGame } from './hooks/useNeuroGame';
 import { useTweaks } from './hooks/useTweaks';
-import { CLIMATE, CLIMATE_ORDER, FONTS, START } from './lib/climate';
+import { CLIMATE, FONTS } from './lib/climate';
 import { Board } from './components/Board';
 import { Canopy } from './components/Canopy';
 import { Coach } from './components/Coach';
 import { Ledger } from './components/Ledger';
 import { LogoMark } from './components/LogoMark';
+import { LoopSpine } from './components/LoopSpine';
 import { DevTweaks } from './components/dev/DevTweaks';
 
 const sv = (o: Record<string, string | number>): CSSProperties => o as CSSProperties;
@@ -21,11 +22,10 @@ export default function App() {
 
   const cfg = CLIMATE[g.climate];
   const ft = FONTS[t.font];
-  const density = cfg.density * t.density;
 
   const stageStyle = sv({
     '--bio': (cfg.bio * t.bio).toFixed(3),
-    '--density': density.toFixed(3),
+    '--density': (cfg.density * t.density).toFixed(3),
     '--breath': (cfg.breath / Math.max(0.4, t.breathSpeed)).toFixed(1) + 's',
     '--clearing': g.climate === 'silence' ? 1 : 0.7,
     '--accent': cfg.accent,
@@ -54,18 +54,17 @@ export default function App() {
               <div className="brand-sub">la preuve silencieuse</div>
             </div>
           </div>
-          <div className="climates" style={sv({ '--accent': cfg.accent })}>
-            {CLIMATE_ORDER.map((k) => (
-              <button
-                key={k}
-                className="climate-btn"
-                data-on={g.climate === k}
-                style={sv({ '--accent': CLIMATE[k].accent })}
-                onClick={() => g.setClimate(k)}
-              >
-                {CLIMATE[k].label}
-              </button>
-            ))}
+
+          <div className="loop-nav" style={sv({ '--accent': cfg.accent })}>
+            <LoopSpine loop={g.loop} onGoto={g.gotoStep} />
+            <button
+              className="loop-cta"
+              data-ready={g.cta.ready}
+              disabled={!g.cta.ready}
+              onClick={g.runCta}
+            >
+              {g.cta.label}
+            </button>
           </div>
         </header>
 
@@ -95,19 +94,7 @@ export default function App() {
                 Au trait : <b>{turnName}</b>
               </span>
             </div>
-
             <Ledger proofs={g.proofs} />
-
-            <div className="organs">
-              <button className="organ proof" onClick={() => g.newGame(g.guidedFen, 'guided')}>
-                <small>Plateau guidé</small>
-                Voir la menace
-              </button>
-              <button className="organ rematch" onClick={() => g.newGame(START, 'today')}>
-                <small>Revanche</small>
-                Nouvelle partie
-              </button>
-            </div>
           </div>
         </main>
       </div>

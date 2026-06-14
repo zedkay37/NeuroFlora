@@ -5,6 +5,7 @@ import './styles/base.css';
 import './styles/canopy.css';
 import './styles/board.css';
 import './styles/chrome.css';
+import './styles/loop.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('#root introuvable');

@@ -55,6 +55,15 @@ export function climateCoach(climate: ClimateKey): CoachMessage {
   };
 }
 
+export function todayCoach(): CoachMessage {
+  return {
+    eyebrow: 'Aujourd’hui',
+    temp: 'var(--calc)',
+    line: 'Une seule compétence : *voir la menace* avant de calculer.',
+    hint: 'Commence la boucle — l’aide se retirera à mesure que tu apprends.',
+  };
+}
+
 export function mateCoach(): CoachMessage {
   return { eyebrow: 'Fin', temp: 'var(--threat)', line: 'Échec et mat. Le réseau se fige.', hint: '' };
 }
