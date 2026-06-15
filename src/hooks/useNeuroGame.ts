@@ -26,6 +26,7 @@ import {
   type CoachMessage,
 } from '../lib/coach';
 import { initLoop, loopCta, loopReducer, type LoopStep } from '../lib/loop';
+import { ratio as precisionRatio, record, tier as precisionTier, ZERO, type Precision } from '../lib/precision';
 
 export interface Proof {
   id: number;
@@ -67,6 +68,7 @@ export function useNeuroGame() {
   const [proofs, setProofs] = useState<Proof[]>([]);
   const [proofSqs, setProofSqs] = useState<Set<string>>(() => new Set());
   const [coach, setCoach] = useState<CoachMessage | null>(null);
+  const [precision, setPrecision] = useState<Precision>(ZERO);
 
   const pendingThreat = useRef<Threat | null>(null);
   const provedAt = useRef(0);
@@ -148,6 +150,8 @@ export function useNeuroGame() {
         setSelected(null);
         setTargets([]);
         const proven = !!before && !stillThreatened(game, before);
+        // jauge de précision : une menace présentée, l'ai-je lue ?
+        if (before) setPrecision((p) => record(p, true, proven));
         if (proven) depositProof(before!, sq);
         if (climate === 'guided' && proven) dispatch({ type: 'GUIDED_PROVEN' });
         if (climate === 'silence') dispatch({ type: 'SILENCE_RESOLVED' });
@@ -237,6 +241,11 @@ export function useNeuroGame() {
     proofs,
     proofSqs,
     coach,
+    precision: {
+      ratio: precisionRatio(precision),
+      tier: precisionTier(precision),
+      presented: precision.presented,
+    },
     calcVeins,
     showGuides,
     onSquareClick,

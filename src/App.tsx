@@ -12,6 +12,7 @@ import { Coach } from './components/Coach';
 import { Ledger } from './components/Ledger';
 import { LogoMark } from './components/LogoMark';
 import { LoopSpine } from './components/LoopSpine';
+import { PrecisionGauge } from './components/PrecisionGauge';
 import { DevTweaks } from './components/dev/DevTweaks';
 
 const sv = (o: Record<string, string | number>): CSSProperties => o as CSSProperties;
@@ -94,6 +95,11 @@ export default function App() {
                 Au trait : <b>{turnName}</b>
               </span>
             </div>
+            <PrecisionGauge
+              ratio={g.precision.ratio}
+              tier={g.precision.tier}
+              presented={g.precision.presented}
+            />
             <Ledger proofs={g.proofs} />
           </div>
         </main>
