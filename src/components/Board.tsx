@@ -8,11 +8,17 @@ import type { Color, PieceSymbol, Square } from 'chess.js';
 import { Fractal } from '../lib/fractal';
 import type { ClimateKey } from '../lib/climate';
 import type { CalcVein, LastMove } from '../hooks/useNeuroGame';
-import type { MoveTarget, Threat } from '../lib/engine';
+import { FR, type MoveTarget, type Threat } from '../lib/engine';
 
 type Cell = { square: Square; type: PieceSymbol; color: Color } | null;
 
 const GLYPH: Record<PieceSymbol, string> = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
+
+// libellé accessible d'une case
+function squareLabel(sq: string, pc: Cell): string {
+  if (!pc) return `${sq}, vide`;
+  return `${sq}, ${FR[pc.type]} ${pc.color === 'w' ? 'ivoire' : 'graphite'}`;
+}
 
 // petit cast pour les variables CSS custom dans `style`
 const sv = (o: Record<string, string | number>): CSSProperties => o as CSSProperties;
@@ -136,6 +142,8 @@ export function Board({
           }
           data-check={checkSq === sq ? 'true' : undefined}
           data-proof={proofSqs.has(sq) ? 'true' : undefined}
+          role="gridcell"
+          aria-label={squareLabel(sq, pc)}
           onClick={() => onSquareClick(sq)}
         >
           {col === 0 && (
@@ -157,7 +165,8 @@ export function Board({
     <div className="board-nexus" data-state={climate}>
       <Mycelium />
       <div className="board-frame">
-        <div className="board-grid">
+        <div className="board-grid" role="grid" aria-label="Échiquier">
+
           {rows}
 
           {/* OVERLAY de signaux — au-dessus du damier, sous le glow des pièces */}
