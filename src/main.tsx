@@ -8,6 +8,7 @@ import './styles/chrome.css';
 import './styles/loop.css';
 import './styles/gauge.css';
 import './styles/bots.css';
+import './styles/import.css';
 import './styles/tutorial.css';
 
 // outil de calibrage ELO (dev uniquement, exclu du bundle de prod)

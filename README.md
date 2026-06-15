@@ -48,7 +48,7 @@ Seuils durs : `App.tsx < 250` lignes, aucun écran `> 300`, aucun CSS `> 700` (v
 npm install
 npm run dev          # serveur de dev (localhost:5173)
 npm run build        # type-check + build de production
-npm test             # 30 tests (moteur, boucle, précision, coach, fractal)
+npm test             # 46 tests (moteur, boucle, précision, coach, fractal, uci, elo, pgn, angles morts)
 npm run lint:lines   # seuils de lignes
 ```
 
@@ -57,5 +57,7 @@ npm run lint:lines   # seuils de lignes
 - **V1 — Le noyau** ✅ migration · boucle séquentielle · tutoriel · jauge de précision · registre.
 - **V1.5 — L'adversaire** ✅ bots 800–2000 ELO (Stockfish WASM, worker), palette jungle,
   overlay de lecture optionnel. Le moteur charge depuis `public/engine/` (postinstall).
-- **V2 — Import & angles morts** · import PGN / pseudo Lichess, minage des angles morts.
+- **V2 — Import & angles morts** ✅ import PGN (coller / fichier) ou pseudo Lichess, **minage des
+  angles morts** : les menaces que tu n'as pas vues dans tes propres parties (même `detectThreat`,
+  aucun moteur), rejouées dans la boucle — d'abord guidé, puis en silence. Réserve persistée en local.
 - **V3 — Plateforme en ligne** · jeu vs joueurs Lichess (OAuth + Board API).

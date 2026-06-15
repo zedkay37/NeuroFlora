@@ -34,6 +34,8 @@ export interface NeuroGameOpts {
   getMove?: (fen: string) => Promise<UciMove | null>;
   // overlay de lecture : force l'aide (floraison + signal) même hors Guidage
   reading?: boolean;
+  // positions d'entraînement (angle mort rejoué) → remplacent les FEN par défaut
+  positions?: { guided?: string; silence?: string };
 }
 
 export interface Proof {
@@ -54,11 +56,6 @@ export interface LastMove {
 
 const PLAYER: Color = 'w';
 const AI_DELAY = 620;
-const FEN_FOR: Partial<Record<LoopStep, string>> = {
-  today: START,
-  guided: GUIDED_FEN,
-  silence: SILENCE_FEN,
-};
 
 export function useNeuroGame(opts: NeuroGameOpts = {}) {
   const gameRef = useRef<Chess | null>(null);
@@ -89,6 +86,15 @@ export function useNeuroGame(opts: NeuroGameOpts = {}) {
   const climate = loop.step;
   // l'overlay de lecture peut rallumer l'aide hors du climat (sinon : climat décide)
   const showGuides = climate !== 'silence' || !!opts.reading;
+  // FEN attendu pour l'étape courante (override d'angle mort, sinon défaut ; 'proof' = null)
+  const activeFen =
+    climate === 'today'
+      ? START
+      : climate === 'guided'
+        ? (opts.positions?.guided ?? GUIDED_FEN)
+        : climate === 'silence'
+          ? (opts.positions?.silence ?? SILENCE_FEN)
+          : null;
   const position = game.board();
 
   // — menace : la vérité est toujours calculée (preuve + jauge) ;
@@ -229,14 +235,17 @@ export function useNeuroGame(opts: NeuroGameOpts = {}) {
     dispatch({ type: 'REPLAY' });
   }, []);
 
-  // — charger la position quand l'étape change —
-  const loadedStep = useRef<LoopStep>('today');
+  // — (re)charger la position quand le FEN cible change (étape OU angle mort) —
+  const loadedFen = useRef<string | null>(START);
   useEffect(() => {
-    if (loadedStep.current === climate) return;
-    loadedStep.current = climate;
-    const fen = FEN_FOR[climate];
-    if (fen) loadPosition(fen); // 'proof' garde le plateau (vue de synthèse)
-  }, [climate, loadPosition]);
+    if (!activeFen) {
+      loadedFen.current = null; // 'proof' garde le plateau (vue de synthèse)
+      return;
+    }
+    if (activeFen === loadedFen.current) return;
+    loadedFen.current = activeFen;
+    loadPosition(activeFen);
+  }, [activeFen, loadPosition]);
 
   // menace initiale au montage + cleanup du timer
   useEffect(() => {

@@ -6,10 +6,12 @@ import { useCallback, useState, type CSSProperties } from 'react';
 import { useNeuroGame } from './hooks/useNeuroGame';
 import { useTweaks } from './hooks/useTweaks';
 import { useEngine } from './hooks/useEngine';
+import { useLibrary } from './hooks/useLibrary';
 import { CLIMATE, FONTS } from './lib/climate';
 import { eloSettings } from './lib/elo';
 import { DEFAULT_BOT, type Bot } from './lib/bots';
 import { BotPicker } from './components/BotPicker';
+import { Import } from './components/Import';
 import { Board } from './components/Board';
 import { Canopy } from './components/Canopy';
 import { Coach } from './components/Coach';
@@ -29,8 +31,11 @@ export default function App() {
   const engine = useEngine();
   const [bot, setBot] = useState<Bot>(DEFAULT_BOT);
   const [reading, setReading] = useState(false);
+  const lib = useLibrary();
+  const [showImport, setShowImport] = useState(false);
   const getMove = useCallback((fen: string) => engine.bestMove(fen, eloSettings(bot.elo)), [engine, bot]);
-  const g = useNeuroGame({ getMove, reading });
+  const positions = lib.current ? { guided: lib.current.fen, silence: lib.current.fen } : undefined;
+  const g = useNeuroGame({ getMove, reading, positions });
   const [tutorial, setTutorial] = useState(() => !localStorage.getItem(TUT_KEY));
 
   const closeTutorial = () => {
@@ -122,6 +127,14 @@ export default function App() {
               <span className="dot" />
               Lecture {reading ? '· active' : '· retirée'}
             </button>
+            {lib.current && (
+              <div className="practice-chip">
+                <span>Angle mort · {lib.current.theme}</span>
+                <button onClick={() => lib.select(null)} aria-label="Quitter l'angle mort">
+                  ✕
+                </button>
+              </div>
+            )}
             <PrecisionGauge
               ratio={g.precision.ratio}
               tier={g.precision.tier}
@@ -132,7 +145,12 @@ export default function App() {
         </main>
       </div>
 
+      <button className="lib-fab" onClick={() => setShowImport(true)}>
+        ◆ Mes parties
+      </button>
+
       <Settings onReplayTutorial={() => setTutorial(true)} />
+      {showImport && <Import lib={lib} onClose={() => setShowImport(false)} />}
       {tutorial && <Tutorial onClose={closeTutorial} />}
       {import.meta.env.DEV && <DevTweaks t={t} setTweak={setTweak} />}
     </div>

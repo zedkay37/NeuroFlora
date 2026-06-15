@@ -1,0 +1,289 @@
+/* ============================================================
+   NEUROFLORA — Import & angles morts (overlay + déclencheur + puce)
+   ============================================================ */
+.lib-fab {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 40;
+  appearance: none;
+  cursor: pointer;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--proof), transparent 55%);
+  background: color-mix(in oklab, var(--night-2), transparent 18%);
+  color: var(--ink-lo);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  transition: color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+}
+.lib-fab:hover {
+  color: var(--ink-hi);
+  border-color: var(--proof);
+  transform: translateY(-1px);
+}
+
+/* — overlay — */
+.lib-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in oklab, var(--night-1), transparent 22%);
+  backdrop-filter: blur(6px);
+}
+.lib-panel {
+  width: min(560px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 24px 26px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in oklab, var(--ink-faint), transparent 50%);
+  background: var(--night-2);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.7);
+}
+.lib-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.lib-head h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: 23px;
+  color: var(--ink-hi);
+}
+.lib-x {
+  appearance: none;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+.lib-x:hover {
+  color: var(--ink-hi);
+  background: color-mix(in oklab, var(--ink-faint), transparent 80%);
+}
+.lib-intro {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-lo);
+}
+
+/* — sources — */
+.lib-src {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lib-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.lib-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.lib-or {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--ink-faint);
+  opacity: 0.7;
+}
+.lib-src input[type='text'],
+.lib-src input:not([type]),
+.lib-src textarea {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 11px;
+  border-radius: 9px;
+  border: 1px solid color-mix(in oklab, var(--ink-faint), transparent 55%);
+  background: color-mix(in oklab, var(--night-1), transparent 20%);
+  color: var(--ink-hi);
+  font-family: var(--sans);
+  font-size: 13px;
+}
+.lib-src textarea {
+  resize: vertical;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.lib-src button {
+  appearance: none;
+  cursor: pointer;
+  padding: 9px 14px;
+  border-radius: 9px;
+  border: 1px solid color-mix(in oklab, var(--proof), transparent 45%);
+  background: color-mix(in oklab, var(--proof), transparent 84%);
+  color: var(--ink-hi);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  transition: background 0.25s ease;
+}
+.lib-src button:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--proof), transparent 70%);
+}
+.lib-src button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.lib-color {
+  display: flex;
+  gap: 12px;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink-lo);
+}
+.lib-color label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+.lib-err {
+  margin: 0;
+  font-size: 12px;
+  color: var(--threat);
+}
+.lib-msg {
+  margin: 0;
+  font-size: 12px;
+  color: var(--proof);
+}
+
+/* — liste des angles morts — */
+.lib-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid color-mix(in oklab, var(--ink-faint), transparent 70%);
+  padding-top: 14px;
+}
+.lib-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.lib-clear {
+  appearance: none;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--threat);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.lib-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.lib-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in oklab, var(--ink-faint), transparent 60%);
+  background: color-mix(in oklab, var(--night-1), transparent 30%);
+}
+.lib-list li[data-on='true'] {
+  border-color: var(--proof);
+  background: color-mix(in oklab, var(--proof), transparent 88%);
+}
+.lib-spot-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.lib-spot-txt b {
+  font-family: var(--display);
+  font-size: 14px;
+  color: var(--ink-hi);
+}
+.lib-meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+.lib-list li > button {
+  appearance: none;
+  cursor: pointer;
+  flex: none;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in oklab, var(--proof), transparent 45%);
+  background: none;
+  color: var(--ink-hi);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.lib-list li > button:hover {
+  background: color-mix(in oklab, var(--proof), transparent 80%);
+}
+
+/* — puce d'angle mort actif (flanc droit) — */
+.practice-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  max-width: 270px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in oklab, var(--threat), transparent 45%);
+  background: color-mix(in oklab, var(--threat), transparent 88%);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-hi);
+}
+.practice-chip button {
+  appearance: none;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 13px;
+  padding: 0 2px;
+}
+.practice-chip button:hover {
+  color: var(--ink-hi);
+}
