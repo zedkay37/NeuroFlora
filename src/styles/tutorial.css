@@ -1,0 +1,147 @@
+/* ============================================================
+   NEUROFLORA — tutoriel (spotlight + carte) & réglages
+   ============================================================ */
+.tut {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+.tut-catch {
+  position: absolute;
+  inset: 0;
+}
+.tut-spot {
+  position: fixed;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 9999px color-mix(in oklab, var(--night-0), transparent 12%),
+    0 0 26px -2px color-mix(in oklab, var(--accent, var(--calc)), transparent 45%);
+  border: 1px solid color-mix(in oklab, var(--accent, var(--calc)), transparent 30%);
+  transition: all 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+
+.tut-card {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 18px 18px 16px;
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--night-2), transparent 6%);
+  border: 1px solid color-mix(in oklab, var(--calc-dim), transparent 60%);
+  box-shadow: 0 20px 60px -22px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  transition: left 0.45s ease, top 0.45s ease;
+}
+.tut-eyebrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent, var(--calc));
+}
+.tut-count {
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+}
+.tut-title {
+  font-family: var(--display);
+  font-size: 21px;
+  line-height: 1.18;
+  color: var(--ink-hi);
+}
+.tut-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-mid);
+}
+.tut-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+.tut-skip {
+  appearance: none;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-lo);
+}
+.tut-skip:hover {
+  color: var(--ink-mid);
+}
+.tut-next {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  font: 500 13px/1 var(--sans);
+  padding: 9px 18px;
+  border-radius: 999px;
+  color: var(--night-0);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--accent, var(--calc)), white 10%), var(--accent, var(--calc)));
+  box-shadow: 0 0 18px color-mix(in oklab, var(--accent, var(--calc)), transparent 60%);
+  transition: transform 0.2s ease;
+}
+.tut-next:hover {
+  transform: translateY(-1px);
+}
+
+/* — réglages — */
+.settings {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.settings-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid color-mix(in oklab, var(--calc-dim), transparent 60%);
+  background: color-mix(in oklab, var(--night-2), transparent 25%);
+  color: var(--ink-lo);
+  font-size: 15px;
+  backdrop-filter: blur(8px);
+  transition: color 0.3s ease, border-color 0.3s ease;
+}
+.settings-btn:hover {
+  color: var(--ink-hi);
+  border-color: var(--calc);
+}
+.settings-menu {
+  padding: 6px;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--night-2), transparent 8%);
+  border: 1px solid color-mix(in oklab, var(--calc-dim), transparent 60%);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 36px -16px rgba(0, 0, 0, 0.85);
+}
+.settings-menu button {
+  appearance: none;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 8px 12px;
+  border-radius: 7px;
+  font: 12px/1 var(--sans);
+  color: var(--ink-mid);
+}
+.settings-menu button:hover {
+  background: color-mix(in oklab, var(--calc), transparent 86%);
+  color: var(--ink-hi);
+}

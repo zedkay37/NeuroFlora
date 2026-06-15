@@ -7,6 +7,7 @@ import './styles/board.css';
 import './styles/chrome.css';
 import './styles/loop.css';
 import './styles/gauge.css';
+import './styles/tutorial.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('#root introuvable');

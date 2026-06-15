@@ -2,7 +2,7 @@
    NEUROFLORA — App (composition seule)
    Toute la logique vit dans useNeuroGame ; ici on ne fait que rendre.
    ============================================================ */
-import { type CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useNeuroGame } from './hooks/useNeuroGame';
 import { useTweaks } from './hooks/useTweaks';
 import { CLIMATE, FONTS } from './lib/climate';
@@ -13,13 +13,22 @@ import { Ledger } from './components/Ledger';
 import { LogoMark } from './components/LogoMark';
 import { LoopSpine } from './components/LoopSpine';
 import { PrecisionGauge } from './components/PrecisionGauge';
+import { Tutorial } from './components/Tutorial';
+import { Settings } from './components/Settings';
 import { DevTweaks } from './components/dev/DevTweaks';
 
 const sv = (o: Record<string, string | number>): CSSProperties => o as CSSProperties;
+const TUT_KEY = 'nf.tutorial.v1';
 
 export default function App() {
   const [t, setTweak] = useTweaks();
   const g = useNeuroGame();
+  const [tutorial, setTutorial] = useState(() => !localStorage.getItem(TUT_KEY));
+
+  const closeTutorial = () => {
+    localStorage.setItem(TUT_KEY, 'seen');
+    setTutorial(false);
+  };
 
   const cfg = CLIMATE[g.climate];
   const ft = FONTS[t.font];
@@ -105,6 +114,8 @@ export default function App() {
         </main>
       </div>
 
+      <Settings onReplayTutorial={() => setTutorial(true)} />
+      {tutorial && <Tutorial onClose={closeTutorial} />}
       {import.meta.env.DEV && <DevTweaks t={t} setTweak={setTweak} />}
     </div>
   );
