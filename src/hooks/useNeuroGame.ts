@@ -27,6 +27,14 @@ import {
 } from '../lib/coach';
 import { initLoop, loopCta, loopReducer, type LoopStep } from '../lib/loop';
 import { ratio as precisionRatio, record, tier as precisionTier, ZERO, type Precision } from '../lib/precision';
+import type { UciMove } from '../lib/uci';
+
+export interface NeuroGameOpts {
+  // l'adversaire (Stockfish) ; null/échec → repli sur l'heuristique
+  getMove?: (fen: string) => Promise<UciMove | null>;
+  // overlay de lecture : force l'aide (floraison + signal) même hors Guidage
+  reading?: boolean;
+}
 
 export interface Proof {
   id: number;
@@ -52,10 +60,14 @@ const FEN_FOR: Partial<Record<LoopStep, string>> = {
   silence: SILENCE_FEN,
 };
 
-export function useNeuroGame() {
+export function useNeuroGame(opts: NeuroGameOpts = {}) {
   const gameRef = useRef<Chess | null>(null);
   if (!gameRef.current) gameRef.current = new Chess(START);
   const game = gameRef.current;
+
+  // l'adversaire est lu via ref → scheduleAI reste stable
+  const oppRef = useRef(opts);
+  oppRef.current = opts;
 
   const [, force] = useState(0);
   const redraw = useCallback(() => force((n) => n + 1), []);
@@ -75,7 +87,8 @@ export function useNeuroGame() {
   const aiTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const climate = loop.step;
-  const showGuides = climate !== 'silence';
+  // l'overlay de lecture peut rallumer l'aide hors du climat (sinon : climat décide)
+  const showGuides = climate !== 'silence' || !!opts.reading;
   const position = game.board();
 
   // — menace : la vérité est toujours calculée (preuve + jauge) ;
@@ -122,12 +135,31 @@ export function useNeuroGame() {
 
   const scheduleAI = useCallback(() => {
     clearTimeout(aiTimer.current);
-    aiTimer.current = setTimeout(() => {
+    aiTimer.current = setTimeout(async () => {
       if (game.isGameOver() || game.turn() === PLAYER) return afterPosition();
-      const m = aiMove(game);
-      if (m) {
-        game.move({ from: m.from, to: m.to, promotion: 'q' });
-        setLastMove({ from: m.from, to: m.to });
+      const fenAtReq = game.fen();
+      let mv: { from: string; to: string; promotion?: string } | null = null;
+      const getMove = oppRef.current.getMove;
+      if (getMove) {
+        try {
+          mv = await getMove(fenAtReq);
+        } catch {
+          mv = null;
+        }
+        // position changée pendant la réflexion → on abandonne ce coup
+        if (game.fen() !== fenAtReq) return;
+      }
+      if (!mv) {
+        const h = aiMove(game); // repli heuristique si pas de bot / moteur indispo
+        if (h) mv = { from: h.from, to: h.to, promotion: 'q' };
+      }
+      if (mv) {
+        try {
+          game.move({ from: mv.from, to: mv.to, promotion: mv.promotion || 'q' });
+          setLastMove({ from: mv.from as Square, to: mv.to as Square });
+        } catch {
+          /* coup illégal inattendu : on ignore */
+        }
       }
       redraw();
       afterPosition();

@@ -7,7 +7,11 @@ import './styles/board.css';
 import './styles/chrome.css';
 import './styles/loop.css';
 import './styles/gauge.css';
+import './styles/bots.css';
 import './styles/tutorial.css';
+
+// outil de calibrage ELO (dev uniquement, exclu du bundle de prod)
+if (import.meta.env.DEV) import('./dev/selfPlay');
 
 const root = document.getElementById('root');
 if (!root) throw new Error('#root introuvable');

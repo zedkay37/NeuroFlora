@@ -55,6 +55,7 @@ npm run lint:lines   # seuils de lignes
 ## Feuille de route
 
 - **V1 — Le noyau** ✅ migration · boucle séquentielle · tutoriel · jauge de précision · registre.
-- **V1.5 — L'adversaire** · bots 800–2000 ELO (Stockfish WASM, worker).
+- **V1.5 — L'adversaire** ✅ bots 800–2000 ELO (Stockfish WASM, worker), palette jungle,
+  overlay de lecture optionnel. Le moteur charge depuis `public/engine/` (postinstall).
 - **V2 — Import & angles morts** · import PGN / pseudo Lichess, minage des angles morts.
 - **V3 — Plateforme en ligne** · jeu vs joueurs Lichess (OAuth + Board API).

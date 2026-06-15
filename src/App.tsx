@@ -2,10 +2,14 @@
    NEUROFLORA — App (composition seule)
    Toute la logique vit dans useNeuroGame ; ici on ne fait que rendre.
    ============================================================ */
-import { useState, type CSSProperties } from 'react';
+import { useCallback, useState, type CSSProperties } from 'react';
 import { useNeuroGame } from './hooks/useNeuroGame';
 import { useTweaks } from './hooks/useTweaks';
+import { useEngine } from './hooks/useEngine';
 import { CLIMATE, FONTS } from './lib/climate';
+import { eloSettings } from './lib/elo';
+import { DEFAULT_BOT, type Bot } from './lib/bots';
+import { BotPicker } from './components/BotPicker';
 import { Board } from './components/Board';
 import { Canopy } from './components/Canopy';
 import { Coach } from './components/Coach';
@@ -22,7 +26,11 @@ const TUT_KEY = 'nf.tutorial.v1';
 
 export default function App() {
   const [t, setTweak] = useTweaks();
-  const g = useNeuroGame();
+  const engine = useEngine();
+  const [bot, setBot] = useState<Bot>(DEFAULT_BOT);
+  const [reading, setReading] = useState(false);
+  const getMove = useCallback((fen: string) => engine.bestMove(fen, eloSettings(bot.elo)), [engine, bot]);
+  const g = useNeuroGame({ getMove, reading });
   const [tutorial, setTutorial] = useState(() => !localStorage.getItem(TUT_KEY));
 
   const closeTutorial = () => {
@@ -104,6 +112,16 @@ export default function App() {
                 Au trait : <b>{turnName}</b>
               </span>
             </div>
+            <BotPicker value={bot.id} onSelect={setBot} />
+            <button
+              className="reading-toggle"
+              data-on={reading}
+              aria-pressed={reading}
+              onClick={() => setReading((r) => !r)}
+            >
+              <span className="dot" />
+              Lecture {reading ? '· active' : '· retirée'}
+            </button>
             <PrecisionGauge
               ratio={g.precision.ratio}
               tier={g.precision.tier}
